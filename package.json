@@ -1,0 +1,22 @@
+{
+  "name": "gsap-in-attributes",
+  "version": "1.0.0",
+  "description": "Declarative GSAP animations driven by data-attributes. Built for Webflow.",
+  "main": "dist/gsap-attributes.js",
+  "unpkg": "dist/gsap-attributes.min.js",
+  "jsdelivr": "dist/gsap-attributes.min.js",
+  "files": ["dist", "src", "README.md"],
+  "scripts": {
+    "build": "cp src/gsap-attributes.js dist/gsap-attributes.js && terser dist/gsap-attributes.js -c -m --comments \"/^!/\" -o dist/gsap-attributes.min.js",
+    "demo": "npx serve ."
+  },
+  "keywords": ["gsap", "webflow", "animation", "scrolltrigger", "splittext", "data-attributes", "declarative"],
+  "author": "Nico Menezes",
+  "license": "MIT",
+  "peerDependencies": {
+    "gsap": ">=3.13.0"
+  },
+  "devDependencies": {
+    "terser": "^5.0.0"
+  }
+}

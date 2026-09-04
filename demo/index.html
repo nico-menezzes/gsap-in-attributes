@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GSAP in Attributes</title>
+<style>
+  :root{
+    --bg:#0a0a0b; --bg-soft:#111113; --card:#141416; --line:#232327;
+    --ink:#f4f4f5; --muted:#a3a3ab; --dim:#86868f;
+    --accent:#7cf6b0; --accent-2:#89b4ff; --code:#f6c177;
+    --radius:14px; --maxw:1080px;
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,Consolas,monospace;
+    --ease-smooth:cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-snappy:cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--font);
+    line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  h1,h2,h3{letter-spacing:-.02em;line-height:1.1;font-weight:600;text-wrap:balance}
+  .mono{font-family:var(--mono)}
+
+  header.bar{
+    position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,10,11,.7);border-bottom:1px solid var(--line);
+  }
+  .bar .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px}
+  .logo .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+  .badge{font-size:12px;color:var(--dim);border:1px solid var(--line);padding:3px 8px;border-radius:20px}
+
+  .hero{padding:120px 0 90px;text-align:center;position:relative}
+  .hero .kicker{color:var(--accent);font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px}
+  .hero h1{font-size:clamp(40px,7vw,76px);margin-bottom:22px}
+  .hero h1 .grad{color:var(--accent)}
+  .hero p{color:var(--muted);font-size:clamp(16px,2.2vw,20px);max-width:600px;margin:0 auto 34px}
+  .cta{display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+  .btn{
+    padding:12px 22px;border-radius:10px;font-size:14px;font-weight:500;text-decoration:none;
+    border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
+    transition:transform .16s var(--ease-smooth), border-color .16s ease, background .16s ease, filter .16s ease;
+  }
+  .btn.primary{background:var(--accent);color:#07120b;border-color:var(--accent)}
+  .btn:active{transform:scale(0.97)}
+  .btn:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+  @media (hover:hover) and (pointer:fine){
+    .btn:hover{border-color:var(--dim);transform:translateY(-1px)}
+    .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  }
+
+  section.block{padding:70px 0;border-top:1px solid var(--line)}
+  .block h2{font-size:clamp(26px,4vw,38px);margin-bottom:12px}
+  .block .lead{color:var(--muted);max-width:62ch;margin-bottom:40px;text-wrap:pretty}
+
+  code.inline{font-family:var(--mono);font-size:.86em;background:var(--bg-soft);border:1px solid var(--line);padding:2px 6px;border-radius:6px;color:var(--code)}
+  pre{background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.7;color:#d7d7db}
+  pre .attr{color:var(--accent)} pre .val{color:var(--code)} pre .tag{color:#89b4ff} pre .cm{color:var(--dim)}
+
+  /* Two-up columns (scroll vs load) */
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){.cols2{grid-template-columns:1fr}}
+  .tcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .tcard h3{font-size:18px;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+  .tcard .tag{font-size:11px;font-family:var(--mono);color:#07120b;background:var(--accent);padding:2px 8px;border-radius:20px;font-weight:600}
+  .tcard .tag.blue{background:var(--accent-2)}
+  .tcard p{color:var(--muted);font-size:14px;margin-bottom:16px}
+  .tcard pre{font-size:12px;padding:14px 16px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+  .demo-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 22px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;
+    position:relative;overflow:hidden;
+    transition:border-color .2s ease, transform .2s var(--ease-smooth);
+  }
+  @media (hover:hover) and (pointer:fine){
+    .demo-card:hover{border-color:#33333a;transform:translateY(-2px)}
+  }
+  .demo-card .visual{display:flex;align-items:center;justify-content:center;flex:1;padding:14px 0}
+  .chip{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent-2),var(--accent));box-shadow:0 8px 30px rgba(124,246,176,.18)}
+  .demo-card .name{font-family:var(--mono);font-size:13px;color:var(--accent)}
+  .demo-card .sub{font-size:12px;color:var(--dim);margin-top:2px}
+
+  /* Live section-entrance example */
+  .feat-head{max-width:560px;margin-bottom:34px}
+  .feat-head h3{font-size:clamp(24px,4vw,34px);margin-bottom:10px}
+  .feat-head p{color:var(--muted)}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:760px){.feat-grid{grid-template-columns:1fr}}
+  .feat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px}
+  .feat .ico{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--accent-2),var(--accent));margin-bottom:16px}
+  .feat h4{font-size:16px;margin-bottom:6px}
+  .feat p{color:var(--muted);font-size:13px}
+  .replay-hint{margin-top:20px;font-size:13px;color:var(--dim);display:flex;align-items:center;gap:10px}
+
+  .text-demo{padding:34px 0;border-bottom:1px solid var(--line)}
+  .text-demo:last-child{border-bottom:0}
+  .text-demo .tag{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:12px;display:block}
+  .text-demo h3{font-size:clamp(24px,4vw,40px);font-weight:600}
+
+  /* Gallery: click to replay */
+  .demo-card{cursor:pointer}
+  .demo-card .replay{position:absolute;top:12px;right:14px;font-size:10px;font-family:var(--mono);color:var(--dim);opacity:0;transition:opacity .15s ease}
+  @media (hover:hover){ .demo-card:hover .replay{opacity:1} }
+  .demo-card:active{transform:scale(0.985)}
+
+  /* Scroll simulation */
+  .sim-wrap{display:grid;grid-template-columns:1.35fr 1fr;gap:24px;align-items:start}
+  @media(max-width:820px){.sim-wrap{grid-template-columns:1fr}}
+  .sim{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--bg-soft)}
+  .sim-head{padding:11px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;justify-content:space-between;align-items:center}
+  .sim-head .dotrow{display:flex;gap:6px}
+  .sim-head .d{width:9px;height:9px;border-radius:50%;background:#2a2a30;display:inline-block}
+  .sim-track{height:360px;overflow-y:auto;overscroll-behavior:contain}
+  .sim-track::-webkit-scrollbar{width:10px}
+  .sim-track::-webkit-scrollbar-thumb{background:#2a2a30;border-radius:8px}
+  .sim-track::-webkit-scrollbar-track{background:transparent}
+  .sim-spacer{height:290px;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:13px;font-family:var(--mono)}
+  .sim-target{margin:0 24px}
+  .sim-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px}
+  .sim-card h4{font-size:20px;margin-bottom:8px}
+  .sim-card p{color:var(--muted);font-size:14px}
+
+  /* Load simulation — a mock browser frame that replays a page-load intro */
+  .lsim{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--bg-soft)}
+  .lsim-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .lsim-bar .dotrow{display:flex;gap:6px}
+  .lsim-bar .d{width:9px;height:9px;border-radius:50%;background:#2a2a30;display:inline-block}
+  .lsim-url{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:5px 10px;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lsim-reload{cursor:pointer;border:1px solid var(--line);border-radius:7px;width:30px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink);background:transparent;transition:transform .2s var(--ease-smooth),border-color .14s ease}
+  .lsim-reload:active{transform:rotate(-300deg)}
+  .lsim-reload:focus-visible{outline:2px solid var(--accent-2);outline-offset:2px}
+  @media(hover:hover){.lsim-reload:hover{border-color:var(--accent)}}
+  .lsim-screen{padding:46px 36px;min-height:300px;display:flex;align-items:center}
+  .lsim-stack{display:flex;flex-direction:column;gap:16px;align-items:flex-start;width:100%}
+  .lsim-kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .lsim-stack h4{font-size:clamp(22px,3.4vw,30px);font-weight:600;line-height:1.12;letter-spacing:-.02em}
+  .lsim-stack p{color:var(--muted);font-size:14px;max-width:42ch}
+  .lsim-btns{display:flex;gap:10px;margin-top:4px}
+  .lsim-btn{font-size:13px;padding:9px 16px;border-radius:9px;border:1px solid var(--line);color:var(--ink)}
+  .lsim-btn.primary{background:var(--accent);color:#07120b;border-color:var(--accent)}
+
+  /* Playground */
+  .play{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:start}
+  @media(max-width:820px){.play{grid-template-columns:1fr}.hero{padding-top:80px}}
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);min-height:340px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .stage .flag{position:absolute;top:12px;left:12px;font-size:10px;font-family:var(--mono);color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+  .stage .box{width:120px;height:120px;border-radius:18px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:flex;align-items:center;justify-content:center;color:#07120b;font-weight:600;font-family:var(--mono);font-size:13px}
+  .stage .box.text{width:auto;height:auto;background:none;color:var(--ink);font-size:34px;font-family:var(--font)}
+  .controls{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+  select,input[type=text]{width:100%;background:var(--bg-soft);border:1px solid var(--line);color:var(--ink);
+    border-radius:9px;padding:9px 11px;font-family:var(--mono);font-size:13px;outline:none;transition:border-color .15s ease}
+  select:focus,input:focus{border-color:var(--accent-2)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .divider{border-top:1px solid var(--line);margin:16px 0 14px;padding-top:2px}
+  .divider span{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+  .scroll-only{display:none}
+  .controls.is-scroll .scroll-only{display:block}
+  .snippet{margin-top:18px}
+  .snippet .lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .copy{cursor:pointer;color:var(--accent);font-size:11px;border:1px solid var(--line);padding:3px 9px;border-radius:6px;transition:transform .14s var(--ease-smooth), border-color .14s ease}
+  .copy:active{transform:scale(0.96)}
+  @media (hover:hover) and (pointer:fine){ .copy:hover{border-color:var(--accent)} }
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  td:first-child{white-space:nowrap}
+  td .mono{color:var(--accent);font-size:13px}
+  td .def{color:var(--dim);font-family:var(--mono);font-size:12px}
+  .grp{background:var(--bg-soft)}
+  .grp td{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:600}
+
+  footer{padding:60px 0 80px;border-top:1px solid var(--line);color:var(--dim);font-size:13px;text-align:center}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .btn,.btn:hover,.demo-card,.demo-card:hover,.copy{transform:none!important;transition:border-color .15s ease, background .15s ease, filter .15s ease}
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="logo"><span class="dot"></span> GSAP in Attributes</div>
+    <span class="badge mono">v1.1.0</span>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <div class="kicker" data-gsap="fade" data-gsap-trigger="load">Declarative motion for Webflow</div>
+  <h1 data-gsap="text-up" data-gsap-trigger="load" data-gsap-stagger="0.1">
+    Animate with <span class="grad">attributes</span>,<br>not with code.
+  </h1>
+  <p data-gsap="fade-up" data-gsap-trigger="load" data-gsap-delay="0.35">
+    One library on jsDelivr. You pick the animations right on your elements
+    via <code class="inline">data-gsap</code>: type, trigger, easing, every detail.
+  </p>
+  <div class="cta" data-gsap="fade-up" data-gsap-trigger="load" data-gsap-delay="0.5">
+    <a href="#playground" class="btn primary">Open the playground</a>
+    <a href="#reference" class="btn">See the attributes</a>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="block">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Three steps, done</h2>
+    <p class="lead" data-gsap="fade-up">Paste the script once for the whole site. Then just assign attributes.</p>
+    <pre data-gsap="fade-up"><span class="cm">&lt;!-- 1. In your Webflow site's &lt;head&gt; or before &lt;/body&gt; --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://cdn.jsdelivr.net/gh/YOUR-USER/gsap-in-attributes@1/dist/gsap-attributes.min.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="cm">&lt;!-- 2. Tag any element --&gt;</span>
+<span class="tag">&lt;h1</span> <span class="attr">data-gsap</span>=<span class="val">"text-up"</span><span class="tag">&gt;</span>My headline<span class="tag">&lt;/h1&gt;</span>
+
+<span class="cm">&lt;!-- 3. Customize (optional) --&gt;</span>
+<span class="tag">&lt;div</span> <span class="attr">data-gsap</span>=<span class="val">"fade-up"</span> <span class="attr">data-gsap-y</span>=<span class="val">"60"</span> <span class="attr">data-gsap-ease</span>=<span class="val">"snappy"</span><span class="tag">&gt;&lt;/div&gt;</span></pre>
+  </div>
+</section>
+
+<!-- SCROLL vs LOAD -->
+<section class="block">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Scroll or load, you choose</h2>
+    <p class="lead" data-gsap="fade-up">Every animation is one of two kinds. This is the first decision for any section entrance.</p>
+    <div class="cols2" data-gsap="fade-up" data-gsap-stagger="0.1">
+      <div class="tcard">
+        <h3><span class="tag">scroll</span> Fires on enter</h3>
+        <p>The default. Plays when the element (or its section) scrolls into view. Tune <code class="inline">start</code>, replay with <code class="inline">once="false"</code>, or scrub to the scrollbar.</p>
+        <pre><span class="tag">&lt;section</span> <span class="attr">data-gsap</span>=<span class="val">"fade-up"</span>
+         <span class="attr">data-gsap-start</span>=<span class="val">"top 75%"</span>
+         <span class="attr">data-gsap-once</span>=<span class="val">"false"</span><span class="tag">&gt;</span></pre>
+      </div>
+      <div class="tcard">
+        <h3><span class="tag blue">load</span> Fires on page load</h3>
+        <p>Plays immediately when the page is ready, for heroes and above-the-fold content. Combine with <code class="inline">delay</code> and <code class="inline">stagger</code> to choreograph an intro.</p>
+        <pre><span class="tag">&lt;h1</span> <span class="attr">data-gsap</span>=<span class="val">"text-up"</span>
+    <span class="attr">data-gsap-trigger</span>=<span class="val">"load"</span>
+    <span class="attr">data-gsap-delay</span>=<span class="val">"0.2"</span><span class="tag">&gt;</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRESET GALLERY -->
+<section class="block">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Entrance presets</h2>
+    <p class="lead" data-gsap="fade-up">Scroll down: each card runs the preset named on it. They all trigger on scroll.</p>
+    <div class="grid" id="gallery"></div>
+  </div>
+</section>
+
+<!-- LIVE SECTION ENTRANCE -->
+<section class="block">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">A real section entrance</h2>
+    <p class="lead" data-gsap="fade-up">The heading and the three cards below animate as this section scrolls into view, and the cards stagger. This whole block is just attributes.</p>
+
+    <div class="feat-head">
+      <h3 data-gsap="text-up" data-gsap-start="top 80%">Built for the way you actually build sections.</h3>
+      <p data-gsap="fade-up" data-gsap-start="top 80%" data-gsap-delay="0.1">No custom code, no timeline wiring: tag the wrapper, tag the grid, ship.</p>
+    </div>
+
+    <div class="feat-grid" data-gsap="fade-up" data-gsap-stagger="0.12" data-gsap-target=".feat" data-gsap-start="top 80%">
+      <div class="feat"><div class="ico"></div><h4>Per-element control</h4><p>Duration, ease, distance and direction live on each element.</p></div>
+      <div class="feat"><div class="ico"></div><h4>Stagger children</h4><p>One attribute on the grid cascades every card in sequence.</p></div>
+      <div class="feat"><div class="ico"></div><h4>Trigger where you want</h4><p>Animate a child, but fire when its parent section enters.</p></div>
+    </div>
+
+    <div class="replay-hint" data-gsap="fade" data-gsap-start="top 80%">↑ Scroll up and back down to replay it.</div>
+
+    <pre style="margin-top:26px" data-gsap="fade-up" data-gsap-start="top 90%"><span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="val">"feature-grid"</span>
+     <span class="attr">data-gsap</span>=<span class="val">"fade-up"</span>
+     <span class="attr">data-gsap-stagger</span>=<span class="val">"0.12"</span>
+     <span class="attr">data-gsap-target</span>=<span class="val">".feature-card"</span>
+     <span class="attr">data-gsap-start</span>=<span class="val">"top 80%"</span><span class="tag">&gt;</span>
+  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="val">"feature-card"</span><span class="tag">&gt;</span>…<span class="tag">&lt;/div&gt;</span>  <span class="cm">&lt;!-- ×3 --&gt;</span>
+<span class="tag">&lt;/div&gt;</span></pre>
+  </div>
+</section>
+
+<!-- SCROLL SIMULATION -->
+<section class="block" id="simulation">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Scroll simulation</h2>
+    <p class="lead" data-gsap="fade-up">Scroll <em>inside</em> the frame: the card fires when it enters and reverses when you scroll back. It's a real ScrollTrigger scoped to the panel, so you can replay it endlessly.</p>
+    <div class="sim-wrap" data-gsap="fade-up">
+      <div class="sim">
+        <div class="sim-head"><span class="dotrow"><i class="d"></i><i class="d"></i><i class="d"></i></span> <span>scroll me ↓</span></div>
+        <div class="sim-track" id="sim">
+          <div class="sim-spacer">↓ keep scrolling</div>
+          <div class="sim-target" id="simTarget">
+            <div class="sim-card"><h4>Here I am.</h4><p>Fired on enter. Scroll back up to watch me reverse, then down to replay.</p></div>
+          </div>
+          <div class="sim-spacer">↑ scroll back to reverse</div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="field"><label for="simAnim">Animation</label><select id="simAnim"></select></div>
+        <div class="row2">
+          <div class="field"><label for="simEase">Easing</label><select id="simEase">
+            <option>smooth</option><option>snappy</option><option>swift</option><option>soft</option><option>back.out(1.7)</option>
+          </select></div>
+          <div class="field"><label for="simStart">Start</label><input type="text" id="simStart" value="top 70%"></div>
+        </div>
+        <p style="font-size:12px;color:var(--dim);margin-top:2px">Uses <code class="inline">data-gsap-scroller</code> + <code class="inline">once="false"</code> so it replays.</p>
+        <div class="snippet"><div class="lbl">Snippet</div><pre id="simSnippet" style="font-size:12px"></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOAD SIMULATION -->
+<section class="block" id="load-simulation">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Load simulation</h2>
+    <p class="lead" data-gsap="fade-up">Hit reload to replay the intro, the way it fires when the page first loads. Delay sets the beat before it starts; stagger cascades the elements.</p>
+    <div class="sim-wrap" data-gsap="fade-up">
+      <div class="lsim">
+        <div class="lsim-bar">
+          <span class="dotrow"><i class="d"></i><i class="d"></i><i class="d"></i></span>
+          <span class="lsim-url">yoursite.webflow.io</span>
+          <button class="lsim-reload" id="loadReload" title="Reload" aria-label="Reload the intro">↻</button>
+        </div>
+        <div class="lsim-screen">
+          <div class="lsim-stack" id="loadStack"
+               data-gsap="fade-up" data-gsap-trigger="load"
+               data-gsap-stagger="0.12" data-gsap-target=".load-el">
+            <span class="lsim-kicker load-el">Your product</span>
+            <h4 class="load-el">A headline that lands on load.</h4>
+            <p class="load-el">Subtext follows a beat later, then the buttons arrive.</p>
+            <div class="lsim-btns load-el"><span class="lsim-btn primary">Get started</span><span class="lsim-btn">Learn more</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="field"><label for="loadAnim">Animation</label><select id="loadAnim"></select></div>
+        <div class="row2">
+          <div class="field"><label for="loadEase">Easing</label><select id="loadEase">
+            <option>smooth</option><option>snappy</option><option>swift</option><option>soft</option><option>back.out(1.7)</option>
+          </select></div>
+          <div class="field"><label for="loadDelay">Delay (s)</label><input type="text" id="loadDelay" value="0.1"></div>
+        </div>
+        <div class="field"><label for="loadStagger">Stagger (s)</label><input type="text" id="loadStagger" value="0.12"></div>
+        <button class="btn primary" id="loadReplay" style="width:100%">↻ Reload intro</button>
+        <div class="snippet"><div class="lbl">Snippet</div><pre id="loadSnippet" style="font-size:12px"></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEXT -->
+<section class="block">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Text animations</h2>
+    <p class="lead" data-gsap="fade-up">Splits into lines, words or characters automatically (SplitText included, free in GSAP 3.13+).</p>
+
+    <div class="text-demo">
+      <span class="tag">data-gsap="text-up"  ·  masked per line</span>
+      <h3 data-gsap="text-up">Lines that rise from behind an elegant mask.</h3>
+    </div>
+    <div class="text-demo">
+      <span class="tag">data-gsap="text-words"  ·  stagger per word</span>
+      <h3 data-gsap="text-words">Each word enters in a smooth sequence.</h3>
+    </div>
+    <div class="text-demo">
+      <span class="tag">data-gsap="text-chars"  ·  stagger per character</span>
+      <h3 data-gsap="text-chars">Character by character.</h3>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYGROUND -->
+<section class="block" id="playground">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Build it, copy it</h2>
+    <p class="lead" data-gsap="fade-up">Tweak everything, hit Replay to feel the motion, and copy a snippet ready for Webflow.</p>
+
+    <div class="play" data-gsap="fade-up">
+      <div class="stage">
+        <span class="flag">motion preview</span>
+        <div class="box" id="pgTarget">box</div>
+      </div>
+
+      <div class="controls is-scroll" id="pgControls">
+        <div class="field">
+          <label for="pgAnim">Animation (data-gsap)</label>
+          <select id="pgAnim"></select>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="pgTrigger">Trigger</label>
+            <select id="pgTrigger"><option value="scroll">scroll</option><option value="load">load</option></select>
+          </div>
+          <div class="field">
+            <label for="pgEase">Easing</label>
+            <select id="pgEase">
+              <option>smooth</option><option>snappy</option><option>swift</option><option>soft</option>
+              <option>power3.out</option><option>expo.out</option><option>back.out(1.7)</option>
+              <option>elastic.out(1, 0.4)</option><option>cubic(0.16, 1, 0.3, 1)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="pgDur">Duration (s)</label>
+            <input type="text" id="pgDur" value="0.8">
+          </div>
+          <div class="field">
+            <label for="pgDelay">Delay (s)</label>
+            <input type="text" id="pgDelay" value="0">
+          </div>
+        </div>
+
+        <div class="scroll-only">
+          <div class="row2">
+            <div class="field">
+              <label for="pgStart">Start (scroll)</label>
+              <input type="text" id="pgStart" value="top 85%">
+            </div>
+            <div class="field">
+              <label for="pgOnce">Replay</label>
+              <select id="pgOnce"><option value="true">once</option><option value="false">every time</option></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"><span>Fine-tune (optional)</span></div>
+        <div class="row3">
+          <div class="field"><label for="pgY">y</label><input type="text" id="pgY" placeholder="40"></div>
+          <div class="field"><label for="pgX">x</label><input type="text" id="pgX" placeholder="0"></div>
+          <div class="field"><label for="pgOpacity">opacity</label><input type="text" id="pgOpacity" placeholder="0"></div>
+        </div>
+        <div class="row3">
+          <div class="field"><label for="pgScale">scale</label><input type="text" id="pgScale" placeholder="1"></div>
+          <div class="field"><label for="pgRotate">rotate</label><input type="text" id="pgRotate" placeholder="0"></div>
+          <div class="field"><label for="pgBlur">blur</label><input type="text" id="pgBlur" placeholder="0"></div>
+        </div>
+
+        <button class="btn primary" id="pgReplay" style="width:100%;margin-top:4px">↻ Replay</button>
+
+        <div class="snippet">
+          <div class="lbl">Snippet <span class="copy" id="pgCopy" role="button" tabindex="0">copy</span></div>
+          <pre id="pgSnippet" style="font-size:12px"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCE -->
+<section class="block" id="reference">
+  <div class="wrap">
+    <h2 data-gsap="fade-up">Every attribute</h2>
+    <p class="lead" data-gsap="fade-up">Everything is optional except <code class="inline">data-gsap</code>. Unset values fall back to the defaults.</p>
+    <div data-gsap="fade-up" style="overflow-x:auto">
+    <table>
+      <thead><tr><th>Attribute</th><th>Values</th><th>Default</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr class="grp"><td colspan="4">Core</td></tr>
+        <tr><td><span class="mono">data-gsap</span></td><td>preset · <code class="inline">custom</code> · <code class="inline">none</code></td><td class="def">—</td><td>The animation. <code class="inline">custom</code>/<code class="inline">none</code> = build your own from overrides.</td></tr>
+        <tr><td><span class="mono">-duration</span></td><td>seconds</td><td class="def">0.8</td><td>How long it runs.</td></tr>
+        <tr><td><span class="mono">-delay</span></td><td>seconds</td><td class="def">0</td><td>Wait before starting.</td></tr>
+        <tr><td><span class="mono">-ease</span></td><td>curve name, GSAP ease or <code class="inline">cubic(...)</code></td><td class="def">smooth</td><td>Built-in: <code class="inline">smooth</code>, <code class="inline">snappy</code>, <code class="inline">swift</code>, <code class="inline">soft</code>.</td></tr>
+
+        <tr class="grp"><td colspan="4">Trigger</td></tr>
+        <tr><td><span class="mono">-trigger</span></td><td><code class="inline">scroll</code> · <code class="inline">load</code></td><td class="def">scroll</td><td>Fire on scroll-into-view, or on page load.</td></tr>
+        <tr><td><span class="mono">-start</span></td><td>ScrollTrigger start</td><td class="def">top 85%</td><td>When it fires on scroll. e.g. <code class="inline">top 60%</code>.</td></tr>
+        <tr><td><span class="mono">-end</span></td><td>ScrollTrigger end</td><td class="def">—</td><td>End point (with scrub, or custom toggles).</td></tr>
+        <tr><td><span class="mono">-once</span></td><td><code class="inline">true</code> · <code class="inline">false</code></td><td class="def">true</td><td>Play once, or replay every time it enters.</td></tr>
+        <tr><td><span class="mono">-scrub</span></td><td><code class="inline">true</code> · number</td><td class="def">false</td><td>Tie progress to the scrollbar (parallax).</td></tr>
+        <tr><td><span class="mono">-trigger-element</span></td><td>CSS selector</td><td class="def">self</td><td>Fire when another element (e.g. the parent section) enters.</td></tr>
+        <tr><td><span class="mono">-toggle</span></td><td>toggleActions</td><td class="def">auto</td><td>Full ScrollTrigger control, e.g. <code class="inline">play pause resume reverse</code>.</td></tr>
+        <tr><td><span class="mono">-markers</span></td><td><code class="inline">true</code></td><td class="def">false</td><td>Show ScrollTrigger debug markers.</td></tr>
+
+        <tr class="grp"><td colspan="4">Customize the motion</td></tr>
+        <tr><td><span class="mono">-distance</span></td><td>px</td><td class="def">40</td><td>Travel distance for the presets.</td></tr>
+        <tr><td><span class="mono">-y</span> / <span class="mono">-x</span></td><td>px or %</td><td class="def">—</td><td>Override the start offset on either axis.</td></tr>
+        <tr><td><span class="mono">-opacity</span></td><td>0–1</td><td class="def">—</td><td>Override the start opacity.</td></tr>
+        <tr><td><span class="mono">-scale</span></td><td>number</td><td class="def">—</td><td>Override the start scale.</td></tr>
+        <tr><td><span class="mono">-rotate</span></td><td>degrees</td><td class="def">—</td><td>Override the start rotation.</td></tr>
+        <tr><td><span class="mono">-blur</span></td><td>px</td><td class="def">—</td><td>Start blurred, animate to sharp.</td></tr>
+
+        <tr class="grp"><td colspan="4">Stagger</td></tr>
+        <tr><td><span class="mono">-stagger</span></td><td>seconds</td><td class="def">0.06</td><td>On a container, cascade its children in sequence.</td></tr>
+        <tr><td><span class="mono">-stagger-from</span></td><td><code class="inline">start</code>·<code class="inline">center</code>·<code class="inline">end</code>·<code class="inline">edges</code>·<code class="inline">random</code></td><td class="def">start</td><td>Where the cascade begins.</td></tr>
+        <tr><td><span class="mono">-target</span></td><td>CSS selector</td><td class="def">children</td><td>Which descendants to stagger.</td></tr>
+        <tr><td><span class="mono">-split</span></td><td><code class="inline">lines</code>·<code class="inline">words</code>·<code class="inline">chars</code></td><td class="def">auto</td><td>Override how text is split.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  GSAP in Attributes · v1.1.0 · built for Webflow · MIT
+</footer>
+
+<!-- The library (local source for the demo) -->
+<script>window.GSAPAttr = { debug: true };</script>
+<script src="../src/gsap-attributes.js"></script>
+
+<!-- Demo glue: gallery + playground -->
+<script>
+(function(){
+  var PRESETS = [
+    ['fade','opacity'],['fade-up','opacity + y'],['fade-down','opacity + y'],
+    ['fade-left','opacity + x'],['fade-right','opacity + x'],
+    ['slide-up','translate'],['scale-in','scale 0.8→1'],['zoom-in','scale 1.15→1'],
+    ['rotate-in','rotation'],['flip-up','rotationX'],['blur-in','blur→sharp'],
+    ['skew-in','skew + y'],['reveal-up','clip-path'],['reveal-left','clip-path']
+  ];
+  var gallery = document.getElementById('gallery');
+  function cardHTML(p){
+    return '<span class="replay">↻ replay</span>' +
+      '<div class="visual"><div class="chip"></div></div>' +
+      '<div><div class="name">'+p[0]+'</div><div class="sub">'+p[1]+'</div></div>';
+  }
+  // Click a card to replay its preset on demand (plays immediately).
+  function replayCard(card){
+    if(!window.gsap || !window.GSAPAttr) return;
+    var fresh = card.cloneNode(true);
+    card.parentNode.replaceChild(fresh, card);
+    fresh.__gsapAttrInit = false;
+    fresh.setAttribute('data-gsap-trigger', 'load');
+    window.gsap && window.gsap.killTweensOf(fresh);
+    window.GSAPAttr.refresh(fresh.parentNode);
+    fresh.addEventListener('click', function(){ replayCard(fresh); });
+  }
+  PRESETS.forEach(function(p){
+    var card = document.createElement('div');
+    card.className = 'demo-card';
+    card.setAttribute('data-gsap', p[0]);
+    card.setAttribute('title', 'Click to replay');
+    card.innerHTML = cardHTML(p);
+    card.addEventListener('click', function(){ replayCard(card); });
+    gallery.appendChild(card);
+  });
+
+  var animSel = document.getElementById('pgAnim');
+  ['fade-up','fade','scale-in','zoom-in','rotate-in','flip-up','blur-in','skew-in',
+   'slide-up','reveal-up','custom','text-up','text-words','text-chars'].forEach(function(n){
+    var o=document.createElement('option');o.value=n;o.textContent=n;animSel.appendChild(o);
+  });
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    controls:$('pgControls'), anim:animSel, trigger:$('pgTrigger'), ease:$('pgEase'),
+    dur:$('pgDur'), delay:$('pgDelay'), start:$('pgStart'), once:$('pgOnce'),
+    y:$('pgY'), x:$('pgX'), opacity:$('pgOpacity'), scale:$('pgScale'), rotate:$('pgRotate'), blur:$('pgBlur'),
+    target:$('pgTarget'), snippet:$('pgSnippet'), copy:$('pgCopy'), replay:$('pgReplay')
+  };
+  function isText(n){ return n.indexOf('text-')===0; }
+  function v(el){ return (el.value||'').trim(); }
+
+  function overrides(){
+    var pairs=[['y',els.y],['x',els.x],['opacity',els.opacity],['scale',els.scale],['rotate',els.rotate],['blur',els.blur]];
+    return pairs.filter(function(p){ return v(p[1])!==''; });
+  }
+
+  function buildSnippet(){
+    var n=els.anim.value, tag=isText(n)?'h2':'div';
+    var lines=['<'+tag+' data-gsap="'+n+'"'];
+    if(els.trigger.value==='load') lines.push('     data-gsap-trigger="load"');
+    if(v(els.dur)!=='0.8') lines.push('     data-gsap-duration="'+v(els.dur)+'"');
+    if(v(els.delay)!=='0') lines.push('     data-gsap-delay="'+v(els.delay)+'"');
+    if(els.ease.value!=='smooth') lines.push('     data-gsap-ease="'+els.ease.value+'"');
+    if(els.trigger.value==='scroll'){
+      if(v(els.start)!=='top 85%') lines.push('     data-gsap-start="'+v(els.start)+'"');
+      if(els.once.value==='false') lines.push('     data-gsap-once="false"');
+    }
+    overrides().forEach(function(p){ lines.push('     data-gsap-'+p[0]+'="'+v(p[1])+'"'); });
+    var out=lines.join('\n');
+    out += isText(n) ? '>Your text here</'+tag+'>' : '></'+tag+'>';
+    els.snippet.textContent=out;
+  }
+
+  function syncMode(){
+    els.controls.classList.toggle('is-scroll', els.trigger.value==='scroll');
+  }
+
+  function play(){
+    var n=els.anim.value; var t=els.target;
+    if(isText(n)){ t.className='box text'; t.textContent='Preview'; }
+    else{ t.className='box'; t.textContent='box'; }
+    window.gsap && window.gsap.killTweensOf(t);
+    var fresh = t.cloneNode(true);
+    t.parentNode.replaceChild(fresh, t);
+    els.target = fresh; fresh.id='pgTarget';
+    fresh.setAttribute('data-gsap', n);
+    if(v(els.dur)) fresh.setAttribute('data-gsap-duration', v(els.dur));
+    if(v(els.delay)) fresh.setAttribute('data-gsap-delay', v(els.delay));
+    fresh.setAttribute('data-gsap-ease', els.ease.value);
+    overrides().forEach(function(p){ fresh.setAttribute('data-gsap-'+p[0], v(p[1])); });
+    // Stage always plays on load so you can feel the motion, regardless of trigger.
+    fresh.setAttribute('data-gsap-trigger', 'load');
+    fresh.__gsapAttrInit = false;
+    window.GSAPAttr.refresh(fresh.parentNode);
+    buildSnippet();
+  }
+
+  ['change','input'].forEach(function(ev){
+    [els.anim,els.trigger,els.ease,els.dur,els.delay,els.start,els.once,
+     els.y,els.x,els.opacity,els.scale,els.rotate,els.blur].forEach(function(c){
+      c.addEventListener(ev, function(){ if(c===els.trigger) syncMode(); buildSnippet(); });
+    });
+  });
+  els.anim.addEventListener('change', play);
+  els.replay.addEventListener('click', play);
+  function doCopy(){
+    navigator.clipboard && navigator.clipboard.writeText(els.snippet.textContent);
+    els.copy.textContent='copied ✓';
+    setTimeout(function(){els.copy.textContent='copy';},1400);
+  }
+  els.copy.addEventListener('click', doCopy);
+  els.copy.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); doCopy(); } });
+
+  // ---- Scroll simulation ----
+  var simAnimSel = $('simAnim');
+  ['fade-up','fade','scale-in','zoom-in','rotate-in','flip-up','blur-in','slide-up','reveal-up','text-up'].forEach(function(n){
+    var o=document.createElement('option');o.value=n;o.textContent=n;simAnimSel.appendChild(o);
+  });
+  var simEase=$('simEase'), simStart=$('simStart'), simSnippet=$('simSnippet');
+  function simSnip(){
+    var lines=['<div data-gsap="'+simAnimSel.value+'"',
+               '     data-gsap-scroller="#panel"',
+               '     data-gsap-start="'+(v(simStart)||'top 70%')+'"',
+               '     data-gsap-once="false"'];
+    if(simEase.value!=='smooth') lines.push('     data-gsap-ease="'+simEase.value+'"');
+    simSnippet.textContent=lines.join('\n')+'></div>';
+  }
+  function buildSim(){
+    var simEl=document.getElementById('sim');
+    if(!simEl || !window.GSAPAttr) return;
+    if(window.ScrollTrigger){ window.ScrollTrigger.getAll().forEach(function(s){ if(s.scroller===simEl) s.kill(); }); }
+    var target=document.getElementById('simTarget');
+    var fresh=target.cloneNode(true);
+    fresh.removeAttribute('style');
+    target.parentNode.replaceChild(fresh,target); fresh.id='simTarget';
+    fresh.setAttribute('data-gsap', simAnimSel.value);
+    fresh.setAttribute('data-gsap-ease', simEase.value);
+    fresh.setAttribute('data-gsap-start', v(simStart)||'top 70%');
+    fresh.setAttribute('data-gsap-scroller','#sim');
+    fresh.setAttribute('data-gsap-once','false');
+    fresh.__gsapAttrInit=false;
+    window.gsap && window.gsap.killTweensOf(fresh);
+    simEl.scrollTop=0;
+    window.GSAPAttr.refresh(simEl);
+    if(window.ScrollTrigger) window.ScrollTrigger.refresh();
+    simSnip();
+  }
+  simAnimSel.addEventListener('change', buildSim);
+  simEase.addEventListener('change', buildSim);
+  simStart.addEventListener('change', buildSim);
+
+  // ---- Load simulation ----
+  var loadAnimSel = $('loadAnim');
+  ['fade-up','fade','scale-in','zoom-in','rotate-in','flip-up','blur-in','slide-up','text-up'].forEach(function(n){
+    var o=document.createElement('option');o.value=n;o.textContent=n;loadAnimSel.appendChild(o);
+  });
+  var loadEase=$('loadEase'), loadDelay=$('loadDelay'), loadStagger=$('loadStagger'),
+      loadSnippet=$('loadSnippet'), loadReload=$('loadReload'), loadReplay=$('loadReplay');
+  function loadSnip(){
+    var lines=['<div data-gsap="'+loadAnimSel.value+'"','     data-gsap-trigger="load"'];
+    if(v(loadDelay) && v(loadDelay)!=='0') lines.push('     data-gsap-delay="'+v(loadDelay)+'"');
+    lines.push('     data-gsap-stagger="'+(v(loadStagger)||'0.12')+'"');
+    lines.push('     data-gsap-target=".item"');
+    if(loadEase.value!=='smooth') lines.push('     data-gsap-ease="'+loadEase.value+'"');
+    loadSnippet.textContent=lines.join('\n')+'>\n  <span class="item">…</span>  <!-- ×N -->\n</div>';
+  }
+  function playLoad(){
+    var stack=document.getElementById('loadStack');
+    if(!stack || !window.GSAPAttr) return;
+    window.gsap && window.gsap.killTweensOf(stack.querySelectorAll('.load-el'));
+    var fresh=stack.cloneNode(true);
+    stack.parentNode.replaceChild(fresh,stack); fresh.id='loadStack';
+    fresh.setAttribute('data-gsap', loadAnimSel.value);
+    fresh.setAttribute('data-gsap-trigger','load');
+    if(v(loadDelay)) fresh.setAttribute('data-gsap-delay', v(loadDelay));
+    fresh.setAttribute('data-gsap-stagger', v(loadStagger)||'0.12');
+    fresh.setAttribute('data-gsap-target','.load-el');
+    fresh.setAttribute('data-gsap-ease', loadEase.value);
+    fresh.__gsapAttrInit=false;
+    window.GSAPAttr.refresh(fresh.parentNode);
+    loadSnip();
+  }
+  loadAnimSel.addEventListener('change', playLoad);
+  loadEase.addEventListener('change', playLoad);
+  loadDelay.addEventListener('change', playLoad);
+  loadStagger.addEventListener('change', playLoad);
+  loadReload.addEventListener('click', playLoad);
+  loadReplay.addEventListener('click', playLoad);
+
+  var tries=0;
+  (function waitReady(){
+    if(window.gsap && window.ScrollTrigger && window.SplitText && window.GSAPAttr && window.GSAPAttr.refresh){
+      syncMode(); buildSnippet(); play(); buildSim(); loadSnip(); playLoad();
+    }
+    else if(tries++<160){ setTimeout(waitReady,60); }
+  })();
+})();
+</script>
+</body>
+</html>
