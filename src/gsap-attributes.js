@@ -1,5 +1,5 @@
 /*!
- * GSAP in Attributes — v1.1.0
+ * GSAP in Attributes — v1.2.0
  * Declarative GSAP animations for Webflow (and any HTML) driven by data-attributes.
  *
  * Drop this file on your page (after GSAP loads, or let it auto-load GSAP),
@@ -262,7 +262,11 @@
     'text-lines': { split: 'lines', from: function (o) { return { opacity: 0, y: o.distance }; }, mask: false },
     'text-words': { split: 'words', from: function (o) { return { opacity: 0, y: o.distance * 0.6 }; }, mask: false },
     'text-chars': { split: 'chars', from: function (o) { return { opacity: 0, y: o.distance * 0.5 }; }, mask: false },
-    'text-flip':  { split: 'chars', from: function (o) { return { opacity: 0, rotationX: -90 }; }, mask: false }
+    'text-flip':  { split: 'chars', from: function (o) { return { opacity: 0, rotationX: -90 }; }, mask: false },
+    // Scroll-linked fill: pieces start dim and brighten as you scroll (scrubbed).
+    // Split words by default; set data-gsap-split / data-gsap-opacity to taste.
+    'text-fill':  { split: 'words', from: function (o) { return { opacity: 0.15 }; }, mask: false,
+                    scrub: true, ease: 'none', end: 'bottom 60%' }
   };
 
   /* --------------------------------------------------------------------------
@@ -339,6 +343,12 @@
     }
     var splitType = o.split || def.split;
     var useMask = def.mask;
+
+    // Preset-level scroll defaults (e.g. text-fill is scrubbed by default),
+    // each overridable by the matching attribute.
+    if (def.scrub && o.scrub == null) o.scrub = 'true';
+    if (def.end && !o.end) o.end = def.end;
+    if (def.ease && !el.hasAttribute(A + '-ease')) o.ease = def.ease;
 
     var split = new window.SplitText(el, {
       type: splitType,
@@ -436,7 +446,7 @@
    * 7. Public API
    * ------------------------------------------------------------------------ */
   var API = {
-    version: '1.1.0',
+    version: '1.2.0',
     config: CONFIG,
     presets: PRESETS,
     eases: NAMED_EASES,

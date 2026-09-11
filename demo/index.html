@@ -104,6 +104,11 @@
   .text-demo:last-child{border-bottom:0}
   .text-demo .tag{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:12px;display:block}
   .text-demo h3{font-size:clamp(24px,4vw,40px);font-weight:600}
+  .fill-demo{font-size:clamp(24px,3.8vw,38px);font-weight:600;line-height:1.24;letter-spacing:-.02em}
+  .fill-controls{display:flex;gap:22px;flex-wrap:wrap;align-items:center;margin-top:24px}
+  .fill-controls label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;letter-spacing:.02em}
+  .fill-controls select,.fill-controls input{width:auto;min-width:96px;padding:7px 10px}
+  .fill-controls .hint{font-size:12px;color:var(--dim);font-family:var(--mono)}
 
   /* Gallery: click to replay */
   .demo-card{cursor:pointer}
@@ -367,6 +372,22 @@
     <h2 data-gsap="fade-up">Text animations</h2>
     <p class="lead" data-gsap="fade-up">Splits into lines, words or characters automatically (SplitText included, free in GSAP 3.13+).</p>
 
+    <div class="text-demo" id="fill-section">
+      <span class="tag">data-gsap="text-fill"  ·  brightens as you scroll (scrubbed)</span>
+      <p class="fill-demo" id="fillDemo"
+         data-gsap="text-fill" data-gsap-split="words" data-gsap-opacity="0.15"
+         data-gsap-start="top 75%" data-gsap-end="bottom 55%">Effective integration starts at the tooling stage. Many programs run into trouble long before production begins, so tools should be designed not only to be built well, but to perform reliably in the real world of molding, automation, and long-term production.</p>
+      <div class="fill-controls">
+        <label>Split
+          <select id="fillSplit"><option value="words">words</option><option value="chars">letters</option><option value="lines">lines</option></select>
+        </label>
+        <label>Initial opacity
+          <input type="text" id="fillOpacity" value="0.15">
+        </label>
+        <span class="hint">↕ scroll to fill</span>
+      </div>
+    </div>
+
     <div class="text-demo">
       <span class="tag">data-gsap="text-up"  ·  masked per line</span>
       <h3 data-gsap="text-up">Lines that rise from behind an elegant mask.</h3>
@@ -497,7 +518,8 @@
         <tr><td><span class="mono">-stagger</span></td><td>seconds</td><td class="def">0.06</td><td>On a container, cascade its children in sequence.</td></tr>
         <tr><td><span class="mono">-stagger-from</span></td><td><code class="inline">start</code>·<code class="inline">center</code>·<code class="inline">end</code>·<code class="inline">edges</code>·<code class="inline">random</code></td><td class="def">start</td><td>Where the cascade begins.</td></tr>
         <tr><td><span class="mono">-target</span></td><td>CSS selector</td><td class="def">children</td><td>Which descendants to stagger.</td></tr>
-        <tr><td><span class="mono">-split</span></td><td><code class="inline">lines</code>·<code class="inline">words</code>·<code class="inline">chars</code></td><td class="def">auto</td><td>Override how text is split.</td></tr>
+        <tr><td><span class="mono">-split</span></td><td><code class="inline">lines</code>·<code class="inline">words</code>·<code class="inline">chars</code></td><td class="def">auto</td><td>Override how text is split (works with any <code class="inline">text-*</code>).</td></tr>
+        <tr><td><span class="mono">text-fill</span></td><td>preset</td><td class="def">—</td><td>Scroll-linked fill: text starts dim and brightens as you scroll. Tune with <code class="inline">-opacity</code> (start) + <code class="inline">-split</code>.</td></tr>
       </tbody>
     </table>
     </div>
@@ -551,7 +573,7 @@
 
   var animSel = document.getElementById('pgAnim');
   ['fade-up','fade','scale-in','zoom-in','rotate-in','flip-up','blur-in','skew-in',
-   'slide-up','reveal-up','custom','text-up','text-words','text-chars'].forEach(function(n){
+   'slide-up','reveal-up','custom','text-up','text-words','text-chars','text-fill'].forEach(function(n){
     var o=document.createElement('option');o.value=n;o.textContent=n;animSel.appendChild(o);
   });
 
@@ -702,6 +724,28 @@
   loadStagger.addEventListener('change', playLoad);
   loadReload.addEventListener('click', playLoad);
   loadReplay.addEventListener('click', playLoad);
+
+  // ---- Scroll-fill demo (split + initial opacity, rebuilt on change) ----
+  var fillSplit=$('fillSplit'), fillOpacity=$('fillOpacity');
+  var fillNode=document.getElementById('fillDemo');
+  var FILL_TEXT = fillNode ? fillNode.textContent : '';
+  function rebuildFill(){
+    var old=document.getElementById('fillDemo');
+    if(!old || !window.GSAPAttr) return;
+    if(window.ScrollTrigger) window.ScrollTrigger.getAll().forEach(function(s){ if(s.trigger===old) s.kill(); });
+    var fresh=document.createElement('p');
+    fresh.className='fill-demo'; fresh.id='fillDemo';
+    fresh.textContent=FILL_TEXT;
+    fresh.setAttribute('data-gsap','text-fill');
+    fresh.setAttribute('data-gsap-split', fillSplit.value);
+    fresh.setAttribute('data-gsap-opacity', v(fillOpacity)||'0.15');
+    fresh.setAttribute('data-gsap-start','top 75%');
+    fresh.setAttribute('data-gsap-end','bottom 55%');
+    old.parentNode.replaceChild(fresh, old);
+    window.GSAPAttr.refresh(fresh.parentNode);
+    if(window.ScrollTrigger) window.ScrollTrigger.refresh();
+  }
+  if(fillSplit){ fillSplit.addEventListener('change', rebuildFill); fillOpacity.addEventListener('change', rebuildFill); }
 
   var tries=0;
   (function waitReady(){

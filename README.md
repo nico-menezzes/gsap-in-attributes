@@ -55,7 +55,7 @@ If GSAP is already loaded in your project, the library detects and reuses it —
 `reveal-up` · `reveal-down` · `reveal-left` · `reveal-right`
 
 **Text (SplitText):**
-`text-up` (masked lines) · `text-lines` · `text-words` · `text-chars` · `text-fade` · `text-flip`
+`text-up` (masked lines) · `text-lines` · `text-words` · `text-chars` · `text-fade` · `text-flip` · `text-fill` (scroll-linked fill)
 
 ---
 
@@ -175,6 +175,27 @@ GSAP in Attributes/
 Open `demo/index.html` in a browser to see everything running.
 
 ---
+
+## Scroll fill (`text-fill`)
+
+Text starts dim and brightens word-by-word (or letter/line) as you scroll, tied to
+the scrollbar. Set the starting opacity with `data-gsap-opacity` and the unit with
+`data-gsap-split`:
+
+```html
+<p data-gsap="text-fill"
+   data-gsap-split="words"      <!-- words | chars | lines -->
+   data-gsap-opacity="0.15"     <!-- dim starting opacity -->
+   data-gsap-start="top 75%"
+   data-gsap-end="bottom 55%">Your paragraph…</p>
+```
+
+It's scrubbed by default (progress follows scroll). For a sharper read boundary, lower
+`data-gsap-duration` and raise `data-gsap-stagger`; for a softer gradient, do the opposite.
+
+## New in v1.2
+
+- `text-fill` — scroll-linked "reading" fill (dim → bright), split by words/letters/lines, with adjustable start opacity.
 
 ## New in v1.1
 
